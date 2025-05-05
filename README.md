@@ -2,6 +2,10 @@
 
 Basit, mobil odaklı bir barkod tarama uygulaması. Taranan barkodlar Firebase Firestore veritabanında saklanır ve geçmiş taramalar görüntülenebilir.
 
+## Demo
+
+Canlı demo: [https://mertalii.github.io/test.github.io](https://mertalii.github.io/test.github.io)
+
 ## Özellikler
 
 - Barkod tarama (kamera aracılığıyla)
@@ -9,13 +13,14 @@ Basit, mobil odaklı bir barkod tarama uygulaması. Taranan barkodlar Firebase F
 - Tarama geçmişi görüntüleme
 - Firebase bağlantı durumu kontrolü
 - Mobil uyumlu tasarım
+- Çevrimdışı kullanım için yerel depolama
 
 ## Kurulum
 
 1. Projeyi klonlayın:
    ```bash
-   git clone https://github.com/MertAlii/barkod-app.git
-   cd barkod-app
+   git clone https://github.com/MertAlii/test.github.io.git
+   cd test.github.io
    ```
 
 2. Bağımlılıkları yükleyin:
@@ -41,11 +46,12 @@ Basit, mobil odaklı bir barkod tarama uygulaması. Taranan barkodlar Firebase F
 
 ## Teknolojiler
 
-- TypeScript
+- JavaScript
 - HTML5 ve CSS3
 - Firebase (Firestore)
 - html5-qrcode (barkod tarama kütüphanesi)
+- Vite (Derleme aracı)
 
 ## Geliştirici
 
-MertAlii - 2025 
+MertAlii - 2025
