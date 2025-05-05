@@ -1,6 +1,6 @@
 import './style.css';
 import { Html5Qrcode } from 'html5-qrcode';
-import { db, checkFirebaseConnection } from './firebase.js';
+import { db, checkFirebaseConnection, deleteBarcode } from './firebase.js';
 import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, where, limit } from 'firebase/firestore';
 
 // HTML elementlerini seçme
@@ -376,6 +376,28 @@ const saveScanResult = async () => {
   }
 };
 
+// Yerel depolamadan barkod silme
+const deleteLocalBarcode = (barcode) => {
+  try {
+    console.log('Yerel barkod siliniyor:', barcode);
+    
+    // Yerel depolamadan barkodu al
+    const localScans = JSON.parse(localStorage.getItem('localScans') || '[]');
+    
+    // Barkodu filtrele ve çıkar
+    const updatedScans = localScans.filter(scan => scan.barcode !== barcode);
+    
+    // Güncellenmiş listeyi kaydet
+    localStorage.setItem('localScans', JSON.stringify(updatedScans));
+    
+    console.log('Yerel barkod başarıyla silindi');
+    return true;
+  } catch (error) {
+    console.error('Yerel barkod silme hatası:', error);
+    return false;
+  }
+};
+
 // Geçmiş sekmesini render et
 const renderHistoryTab = async () => {
   console.log('Geçmiş sekmesi yükleniyor...');
@@ -430,16 +452,24 @@ const renderHistoryTab = async () => {
         
         historyHTML += `
           <div class="history-item">
-            <div>
+            <div class="history-item-content">
               <div class="history-barcode">${scan.barcode}</div>
               <div class="history-product">${scan.productName}</div>
               <div class="history-date">${formattedDate}</div>
+            </div>
+            <div>
+              <button class="btn-icon delete-btn" data-barcode="${scan.barcode}" data-type="local" title="Sil">
+                <i class="trash-icon">🗑️</i>
+              </button>
             </div>
           </div>
         `;
       });
       
       historyListElement.innerHTML = historyHTML;
+      
+      // Silme butonlarına olay dinleyicileri ekle
+      addDeleteButtonListeners();
       return;
     }
     
@@ -471,10 +501,15 @@ const renderHistoryTab = async () => {
       
       historyHTML += `
         <div class="history-item">
-          <div>
+          <div class="history-item-content">
             <div class="history-barcode">${data.barcode}</div>
             <div class="history-product">${data.productName}</div>
             <div class="history-date">${formattedDate}</div>
+          </div>
+          <div>
+            <button class="btn-icon delete-btn" data-doc-id="${doc.id}" data-type="firebase" title="Sil">
+              <i class="trash-icon">🗑️</i>
+            </button>
           </div>
         </div>
       `;
@@ -496,10 +531,15 @@ const renderHistoryTab = async () => {
         
         historyHTML += `
           <div class="history-item" style="border-left: 3px solid var(--primary-color);">
-            <div>
+            <div class="history-item-content">
               <div class="history-barcode">${scan.barcode}</div>
               <div class="history-product">${scan.productName}</div>
               <div class="history-date">${formattedDate} (Yerel)</div>
+            </div>
+            <div>
+              <button class="btn-icon delete-btn" data-barcode="${scan.barcode}" data-type="local" title="Sil">
+                <i class="trash-icon">🗑️</i>
+              </button>
             </div>
           </div>
         `;
@@ -507,6 +547,9 @@ const renderHistoryTab = async () => {
     }
     
     historyListElement.innerHTML = historyHTML;
+    
+    // Silme butonlarına olay dinleyicileri ekle
+    addDeleteButtonListeners();
   } catch (error) {
     console.error('Geçmiş yükleme hatası:', error);
     historyListElement.innerHTML = `
@@ -518,6 +561,57 @@ const renderHistoryTab = async () => {
       </div>
     `;
   }
+};
+
+// Silme butonlarına olay dinleyicileri ekle
+const addDeleteButtonListeners = () => {
+  const deleteButtons = document.querySelectorAll('.delete-btn');
+  
+  deleteButtons.forEach(button => {
+    button.addEventListener('click', async () => {
+      const type = button.getAttribute('data-type');
+      
+      if (type === 'firebase') {
+        const docId = button.getAttribute('data-doc-id');
+        
+        if (confirm('Bu barkodu silmek istediğinizden emin misiniz?')) {
+          button.disabled = true;
+          button.textContent = 'Siliniyor...';
+          
+          const success = await deleteBarcode(docId);
+          
+          if (success) {
+            // Silme başarılı, geçmiş sekmesini yenile
+            renderHistoryTab();
+          } else {
+            // Hata durumunda butonu yeniden etkinleştir
+            button.disabled = false;
+            button.textContent = 'Sil';
+            alert('Barkod silinirken bir hata oluştu!');
+          }
+        }
+      } else if (type === 'local') {
+        const barcode = button.getAttribute('data-barcode');
+        
+        if (confirm('Bu yerel barkodu silmek istediğinizden emin misiniz?')) {
+          button.disabled = true;
+          button.textContent = 'Siliniyor...';
+          
+          const success = deleteLocalBarcode(barcode);
+          
+          if (success) {
+            // Silme başarılı, geçmiş sekmesini yenile
+            renderHistoryTab();
+          } else {
+            // Hata durumunda butonu yeniden etkinleştir
+            button.disabled = false;
+            button.textContent = 'Sil';
+            alert('Yerel barkod silinirken bir hata oluştu!');
+          }
+        }
+      }
+    });
+  });
 };
 
 // Ayarlar sekmesini render et
@@ -539,9 +633,7 @@ const renderSettingsTab = () => {
         
         <div class="settings-section">
           <h2>Uygulama Bilgileri</h2>
-          <p><strong>Sürüm:</strong> 1.0.0</p>
-          <p><strong>Geliştirici:</strong> MertAlii</p>
-          <p><strong>Son Güncelleme:</strong> ${new Date().toLocaleDateString('tr-TR')}</p>
+          <p><strong>Geliştirici:</strong> Kahan Aşcı</p>
         </div>
       </div>
     </div>

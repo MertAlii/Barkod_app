@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, limit } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, limit, doc, deleteDoc } from 'firebase/firestore';
 
 // Firebase yapılandırma bilgileri
 const firebaseConfig = {
@@ -48,6 +48,19 @@ export const checkFirebaseConnection = async () => {
       appId: firebaseConfig.appId ? 'Mevcut' : 'Eksik'
     });
     
+    return false;
+  }
+};
+
+// Firestore'dan barkod silme
+export const deleteBarcode = async (docId) => {
+  try {
+    console.log('Barkod siliniyor:', docId);
+    await deleteDoc(doc(db, 'scans', docId));
+    console.log('Barkod başarıyla silindi');
+    return true;
+  } catch (error) {
+    console.error('Barkod silme hatası:', error);
     return false;
   }
 }; 

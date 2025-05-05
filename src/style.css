@@ -98,6 +98,31 @@ h1, h2, h3 {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.history-item-content {
+  flex-grow: 1;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.btn-icon:hover {
+  background-color: rgba(231, 76, 60, 0.1);
+}
+
+.trash-icon {
+  font-size: 1.2rem;
+  font-style: normal;
+}
+
 .history-date {
   color: #7f8c8d;
   font-size: 0.8rem;
